@@ -90,12 +90,109 @@ namespace DragonPicker
    
 !["screenshot"](Screenshots/1.webp)
 
+#### Работа 2: «Механизм ловли объектов»
+1) Создаём в сцене пустой объект GameplayManager и делаем его синглтоном:
+```cs
+using UnityEngine;
+
+namespace DragonPicker
+{
+    public class GameplayManager : MonoBehaviour
+    {
+        public static GameplayManager Instance { get; private set; }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(this);
+            }
+            else
+            {
+                Instance = this;
+            }
+        }
+    }
+}
+```
+2) Добавляем в него функции, которые изменяют глобальный state игры:
+```cs
+[SerializeField] private TextMeshProUGUI scoreLabel;
+private int score;
+
+// ...
+
+public void IncreaseScore()
+{
+    score++;
+    scoreLabel.text = $"Score: {score}";
+}
+
+public void ClearEggsOnScreen()
+{
+    var eggs = GameObject.FindGameObjectsWithTag("Dragon Egg");
+    foreach(var egg in eggs)
+    {
+        egg.GetComponent<EggExplosion>().Explode();
+    }
+}
+```
+3) Вызываем эти функции соответственно из щита при подбирании яица и из яица при столкновении с землёй.
+
+!["screenshot"](Screenshots/2.webp)
+
+#### Работа 3: «Уменьшение жизни. Добавление текстуры»
+1) Добавляем в GameplayManager код создания щита произвольного размера:
+```cs
+private void CreateShield()
+{
+    for (var i = 0; i < startHealth; i++)
+    {
+        var layer = Instantiate(energyShieldLayerPrefab, energyShield.transform);
+        layer.transform.localScale *= (i + 1) * shieldLayerRadius * 2;
+        energyShieldLayers.Add(layer);
+    }
+    energyShield.GetComponent<SphereCollider>().radius = startHealth * shieldLayerRadius;
+}
+```
+2) Добавлям код уменьшения жизней:
+```cs
+public void OnEggMissed()
+{
+    var eggs = GameObject.FindGameObjectsWithTag("Dragon Egg");
+    foreach (var egg in eggs)
+    {
+        egg.GetComponent<EggExplosion>().Explode();
+    }
+
+    Destroy(energyShieldLayers[^1]);
+    energyShieldLayers.RemoveAt(energyShieldLayers.Count - 1);
+    energyShield.GetComponent<SphereCollider>().radius = energyShieldLayers.Count * shieldLayerRadius;
+
+    if (energyShieldLayers.Count == 0)
+    {
+        SceneManager.LoadScene("MainScene");
+    }
+}
+```
+
+3) Импортируем и добавляем на сцену ассет skybox.
+
+!["screenshot"](Screenshots/3.webp)
+
+#### Работа 4: «Прибираемся в папке»
+1) Все использованные сторонние ассеты с зависимостями (пкм -> Select Dependencies) были перенесены в соответствующие папки проекта.
+2) Папки с оставшимися импортированными ассетами были удалены.
+3) Ассеты проекта были отсортированы по принадлежности к объекту. Отсортировать ассеты по типу можно при вводе в поиск t:prefab или t:material или т.п.
+
+#### Работа 5: «Интеграция игровых сервисов в готовое приложение» 
+1) Загрузка приложения на Яндекс Игры и подключение SDK уже были проведены в лабораторной работе #2: https://github.com/A-Zaikin/Game-Services-Dev-lab2
 
 
 ## Задание 2
-### В проект, выполненный в предыдущем задании, добавить систему проверки того, что SDK подключен (доступен в режиме онлайн и отвечает на запросы)
+### Добавить в приложение интерфейс для вывода статуса наличия игрока в сети (онлайн или офлайн)
 Ход работы:
-
+1) 
 
 
 
